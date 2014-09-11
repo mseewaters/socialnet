@@ -1,4 +1,4 @@
-setwd("D:/0 Stern MSBA/2.3 Network analytics/data")
+setwd("D:/0 Stern MSBA/2.3 Network analytics/post module/socialnet")
 library(igraph)
 
 # Load graphSubset.dl
@@ -12,7 +12,8 @@ head(ac2,20)
 
 
 # Load completeGraph.csv and convert to graph object
-data <- read.delim("D:/0 Stern MSBA/2.3 Network analytics/data/completeGraph.csv", header=FALSE)
+data <- read.delim("D:/0 Stern MSBA/2.3 Network analytics/post module/socialnet/completeGraph.csv", 
+                   header=FALSE)
 g2 <- graph.data.frame(data, directed = TRUE)
 summary(g2)
 
@@ -41,6 +42,7 @@ plot(plot.data$deg, plot.data$V2, log = 'xy', col=plot.data$color,
 # From pre-module, number of followers by ID
 d <- data
 colnames(d) <- c("from","to")
+library(data.table)
 t3 <- data.table(d)[ , list(num_follows=length(from)), by = to] 
 t3 <- t3[order(to),] 
 
