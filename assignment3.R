@@ -53,8 +53,23 @@ for (i in 1:nrow(tpred.wc))
 {
 
   temp5 <- subset(temp4, id == tpred.wc$id[i])
-  if (nrow(temp5) >= 1) adopted[i] = TRUE else
-    adopted[i] = FALSE
+  if (nrow(temp5) >= 1) adopted[i] = 1 else
+    adopted[i] = 0
 }
 
 predall.wc <- cbind(tpred.wc,adopted)
+
+#library(Matching)
+#Y <- predall.wc$adopted
+#Tr <- predall.wc$treated
+#X <- predall.wc$pred.wc
+#match <- Match(Y = Y, Tr = Tr, X = X)
+
+library(MatchIt)
+match <- matchit(treated ~ pred.wc, data = predall.wc, method='optimal')
+summary(match)
+match.treat <- match.data(match, group = "treat")
+match.control <- match.data(match, group = "control")
+m1 <- sum(match.treat$adopted)
+m2 <- sum(match.control$adopted)
+
