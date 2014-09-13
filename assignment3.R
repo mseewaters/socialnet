@@ -19,65 +19,54 @@ t2 <- as.data.frame(merge(t1, all, by = "id"))
 
 create.formatch <- function(h) 
 {
-# Calculate mean timestamp for each hashtag
-tm <- mean(h$timeStamp)
-
-# For each user with followers
-# identify if non-adopters, isolate followees
-# Determine if followees tweeted hashtag before t* treated = TRUE
-# Otherwise treated = FALSE
-# For adopters
-# if tweeted "world cup" before t*, treated = FALSE
-# otherwise isolate followers and follow logic as above
-
-
-treated = NULL
-adopted = NULL
-
-for (i in 1:nrow(t2))
-{
+  # Calculate mean timestamp for each hashtag
+  tm <- median(h$timeStamp)
   
-  tt <- h[h$id == t2$id[i], "timeStamp"]
-  if (length(tt) == 0) 
-    {
-      adopted[i] = FALSE
-      temp <- subset(g, from == t2$id[i])
-      colnames(temp) = c('from','id')
-      temp3 <- subset(merge(temp,h), timeStamp<tm)
-      
-      if (nrow(temp3) >= 1) treated[i] = TRUE else
-        treated[i] = FALSE
-    }
-    else if (tt<tm) 
-      {
-        treated[i] = FALSE 
-        adopted[i] = TRUE
-      }
+  # Create vectors with initial setting as FALSE
+  treated = rep(FALSE, times = nrow(t2))
+  adopted = rep(FALSE, times = nrow(t2))
+
+  # A user is treated if
+  # user tt > tm  (the user has tweeted something after the "treatment" period)
+  # friend th < t*  (someone they follow tweeted the hashtag in the treatment period)
+  # user th > min friend th  (if the user is an adopter, they tweeted the hashtag for the first time after a friend did)
+  #
+  # A user is an adopter if they tweeted the hastag at any time
   
-    else
-      {
-        adopted[i] = TRUE
-        temp <- subset(g, from == t2$id[i])
-        colnames(temp) = c('from','id')
-        temp3 <- subset(merge(temp,h), timeStamp<tm)
-        
-        if (nrow(temp3) >= 1) treated[i] = TRUE else
-          treated[i] = FALSE
-       
-      }  
-}
+  # if a user did not adopted, 
+  #   th (time of tweeting the hashtag) is set to a large number
+  # if a user has no friends that tweeted in the treatment period, 
+  #   min.fth (minimum of firend's tweeting of hashtag) is set 
+  #   to the same large number
+  # This converts an empty set to something useful for the logical criteria
+  
+  for (i in 1:nrow(t2))
+  {
+    
+    tt <- all[all$id == t2$id[i], "timeStamp"]
+    th <- h[h$id == t2$id[i], "timeStamp"]
+    if (length(th) != 0) adopted[i] = TRUE
+    if (length(th) == 0) th = 1000
+    
+    temp <- subset(g, from == t2$id[i])
+    colnames(temp) = c('from','id')
+    temp3 <- subset(merge(temp,h), timeStamp<tm)
+    min.fth <- min(temp3$timeStamp, 1000)
+    
+    if ((tt > tm) & (th > min.fth)) treated[i] = TRUE
+  
+  }
+  
+  # Create final table
+  t.h <- cbind(treated, t2[,4:7])
+  t.h2 <- cbind(treated, t2)
+  
+  # Run logit to predict probability of being treated based on attributes
+  model.h <- glm(treated ~ ., data=t.h, family=binomial(link="logit"))
+  pred.h <- round(predict(model.h, type = "response"),5)
+  
+  return(cbind(adopted, t.h2, pred.h))
 
-# Create final table
-t.h <- cbind(treated, t2[,4:7])
-t.h2 <- cbind(treated, t2)
-
-# Run logit to predict probability of being treated based on attributes
-model.h <- glm(treated ~ ., data=t.h, family=binomial(link="logit"))
-pred.h <- round(predict(model.h, type = "response"),5)
-tpred.h <- cbind(t.h2,pred.h)
-
-predall.h <- cbind(tpred.h,adopted)
-return(predall.h)
 }
 
 randomMatch <- function(y,l)
