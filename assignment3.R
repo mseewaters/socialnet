@@ -101,6 +101,12 @@ ratioCalcSort <- function(z)
   ratio[3] <- randomMatch(z, nrow(match.treat))
   ratio[4] <- round(ratio[1]/ratio[2],2)
   ratio[5] <- round(ratio[1]/ratio[3],2)
+  ratio[6] <- mean(match.treat$pred.h)
+  ratio[7] <- mean(match.control$pred.h)
+  ratio[8] <- mean(match.treat$followers)
+  ratio[9] <- mean(match.control$followers)
+  ratio[10] <- mean(match.treat$friends)
+  ratio[11] <- mean(match.control$friends)
   return(ratio)
 }
 
@@ -125,6 +131,12 @@ ratioCalcMatch <- function(z)
   ratio[3] <- randomMatch(z, nrow(match.treat))
   ratio[4] <- round(ratio[1]/ratio[2],2)
   ratio[5] <- round(ratio[1]/ratio[3],2)
+  ratio[6] <- mean(match.treat$pred.h)
+  ratio[7] <- mean(match.control$pred.h)
+  ratio[8] <- mean(match.treat$followers)
+  ratio[9] <- mean(match.control$followers)
+  ratio[10] <- mean(match.treat$friends)
+  ratio[11] <- mean(match.control$friends)
   return(ratio)
 }
 
@@ -155,14 +167,16 @@ ratios.tbt <- ratioCalcSort(match.data.tbt)
 ratiom.tbt <- ratioCalcMatch(match.data.tbt)
 
 # Clean and combine
-ratio.s.list <- as.data.frame(rbind(ratios.wc, ratios.selfie, ratios.love, ratios.tbt))
-colnames(ratio.s.list) = c("#Adopters:Treated","#Adopters:Control","#Adopters:Random",
-                         "Ratio Treated/Control","Ratio Treated/Random")
-ratio.s.list$hashtag = c("#worldcup","#selfie","#love","#tbt")
-ratio.s.list$treated = c(sum(match.data.wc$treated), sum(match.data.selfie$treated), sum(match.data.love$treated), sum(match.data.tbt$treated))
+hashtag = c("#worldcup","#selfie","#love","#tbt")
+treat.list = c(sum(match.data.wc$treated), sum(match.data.selfie$treated), sum(match.data.love$treated), sum(match.data.tbt$treated))
+ratio.list <- as.data.frame(rbind(ratios.wc, ratios.selfie, ratios.love, ratios.tbt))
+ratio.s.list <- as.data.frame(cbind(hashtag, treat.list, ratio.list))
+colnames(ratio.s.list) = c("Hashtag", "#Treated", "#Adopters:Treated","#Adopters:Control","#Adopters:Random",
+                         "Ratio Treated/Control","Ratio Treated/Random", "MeanPred:Treated", "MeanPred:Control", 
+                         "MeanFollowers:Treated", "MeanFollowers:Control","MeanFriends:Treated", "MeanFriends:Control")
 
-ratio.m.list <- as.data.frame(rbind(ratiom.wc, ratiom.selfie, ratiom.love, ratiom.tbt))
-colnames(ratio.m.list) = c("#Adopters:Treated","#Adopters:Control","#Adopters:Random",
-                         "Ratio Treated/Control","Ratio Treated/Random")
-ratio.m.list$hashtag = c("#worldcup","#selfie","#love","#tbt")
-ratio.m.list$treated = c(sum(match.data.wc$treated), sum(match.data.selfie$treated), sum(match.data.love$treated), sum(match.data.tbt$treated))
+ratio.list <- as.data.frame(rbind(ratiom.wc, ratiom.selfie, ratiom.love, ratiom.tbt))
+ratio.m.list <- as.data.frame(cbind(hashtag, treat.list, ratio.list))
+colnames(ratio.m.list) = c("Hashtag", "#Treated", "#Adopters:Treated","#Adopters:Control","#Adopters:Random",
+                           "Ratio Treated/Control","Ratio Treated/Random", "MeanPred:Treated", "MeanPred:Control", 
+                           "MeanFollowers:Treated", "MeanFollowers:Control","MeanFriends:Treated", "MeanFriends:Control")
