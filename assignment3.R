@@ -10,13 +10,12 @@ tbt <- read.csv("D:/0 Stern MSBA/2.3 Network analytics/propensityMatching/tbt.cs
 # Create table of users that follow someone
 colnames(g) <- c("from","to")
 library(data.table)
-t1 <- data.table(g)[ , list(num_follows=length(from)), by = to] 
+t1 <- data.table(g)[ , list(num_follows=length(to)), by = from] 
 colnames(t1) <- c("id","num_follows")
 
 # Merge users that follow someone and allUsers
 # Creating a table of users with followers and all attributes
 t2 <- as.data.frame(merge(t1, all, by = "id"))
-
 
 create.formatch <- function(h) 
 {
@@ -37,6 +36,7 @@ create.formatch <- function(h)
   #
   # A user is an adopter if they tweeted the hastag at any time
   
+  
   # if a user did not adopted, 
   #   th (time of tweeting the hashtag) is set to a large number
   # if a user has no friends that tweeted in the treatment period, 
@@ -56,6 +56,7 @@ create.formatch <- function(h)
     temp3 <- subset(merge(temp,h), timeStamp<tm)
     min.fth <- min(temp3$timeStamp, 1000)
     
+#    if ((th < tm) & length(temp4)==0) treated[i] = NA else 
     if (th > min.fth) treated[i] = TRUE
   
   }
@@ -90,7 +91,8 @@ ratioCalcSort <- function(z)
   ratio = NULL
   
   #Using sorted lists
-  match.treat <- subset(z, treated==TRUE)
+  match.treat.t <- subset(z, treated==TRUE)
+  match.treat <- match.treat.t[sample(1:nrow(match.treat.t),100,replace=FALSE),]
   match.treat <- match.treat[order(match.treat$pred.h),]
   match.control <- subset(z, treated==FALSE)
   match.control <- match.control[order(match.control$pred.h),]
@@ -115,7 +117,8 @@ ratioCalcMatch <- function(z)
   ratio = NULL
   
   #Using score matching  
-  match.treat <- subset(z, treated==TRUE)
+  match.treat.t <- subset(z, treated==TRUE)
+  match.treat <- match.treat.t[sample(1:nrow(match.treat.t),100,replace=FALSE),]
   match.treat <- match.treat[order(match.treat$pred.h),]
   match.untreat <- subset(z, treated==FALSE)
   match.control <- match.treat  
@@ -124,6 +127,7 @@ ratioCalcMatch <- function(z)
     x <- match.treat[i,10]
     ind <- min(which(abs(match.untreat$pred.h - x)==min(abs(match.untreat$pred.h - x))))
     match.control[i,] <- match.untreat[ind,]
+    match.untreat <- match.untreat[-ind,]
   }
   
   ratio[1] <- sum(match.treat$adopted)
@@ -139,7 +143,6 @@ ratioCalcMatch <- function(z)
   ratio[11] <- mean(match.control$friends)
   return(ratio)
 }
-
 
 
 # WorldCup
@@ -180,3 +183,4 @@ ratio.m.list <- as.data.frame(cbind(hashtag, treat.list, ratio.list))
 colnames(ratio.m.list) = c("Hashtag", "#Treated", "#Adopters:Treated","#Adopters:Control","#Adopters:Random",
                            "Ratio Treated/Control","Ratio Treated/Random", "MeanPred:Treated", "MeanPred:Control", 
                            "MeanFollowers:Treated", "MeanFollowers:Control","MeanFriends:Treated", "MeanFriends:Control")
+
